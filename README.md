@@ -1,38 +1,62 @@
-# ClawPhone
-I recently started running OpenClaw on a $25 Android smartphone to have an isolated sandbox to try out OpenClaw and also figure out interesting use cases of having OpenClaw agents have full control of the hardware of the smartphone.
+# ClawPhone | AgentPhone
 
-There were  a few tweaks I had to make, but eventually got it working reliably and now it just runs in the background inside termux on a tmux session and I can interact with it over Discord and use it like a normal OpenClaw agent and also do phone hardware tasks if needed. It's a cool formfactor for it to run on, very cheap way to get started with OpenClaw, and it's isolated and mobile, you can easily bring it with you anywhere.
+Scripts, tweaks, and notes for running agent CLIs on Android phones through Termux.
 
-You can get the moto g 2025 perepaid smartphone in the US for $30 on [Walmart.com](https://www.walmart.com/ip/Straight-Talk-Motorola-Moto-g-2025-5G-64GB-Blue-Prepaid-Smartphone-Locked-to-Straight-Talk/14552506783) or use any old Android 8+ phone you have lying around.
+The goal is to keep things as native to Termux as possible, only using `proot` or heavier compatibility layers when Android's userspace makes that unavoidable.
 
-Here are some things to note if you try this:
+## Antigravity CLI on Termux
 
+The first packaged script is an installer for Google's Antigravity CLI (`agy`) on ARM64 Android/Termux. It installs/checks dependencies, installs the official Linux ARM64 binary, patches the TCMalloc VA assumptions for common Android devices, creates a glibc wrapper, adds shell shortcuts, and supports uninstall.
 
-0. Make sure you have the termux app installed. I would install `tmux`, a text editor like `nvim`, `nodejs-lts`, `python`. Also install the Termux:API and Termux:GUI apps and give everything full permissions so that OpenClaw will have full access to all the hardware if you want to use it for phone hardware tasks.
-1. Install using the `npm install -g openclaw@latest` option and not the bash script they have as it will fail on Android.
-2. During the installation it may fail the first few times on some dependencies, install those separately using `pkg` on termux and then start the installation again.
-3. `llama.cpp` ships with it and because termux lacks glibc it will have to compile this from scratch which takes 15-30 minutes, just let it run.
-4. When it first runs after installation it might have some errors saying there is no systemd which is accurate, don't panic. You can run the OpenClaw Gateway in the foreground (and maybe in a termux service not sure this is a TODO for me).
-5. When you run `openclaw gateway` for the first time it will have errors saying it cannot access `/tmp/openclaw`. OpenClaw REALLY wants to create a directory in `/tmp` and use it for everything, but because we are on raw termux we do not have access to messaging with the `/tmp` directory of Android so we will get a lot of failures like that. The trick is to put this at the end of your `.bashrc` : 
+Shoutout to [Brajesh](https://github.com/Brajesh2022) for figuring out and sharing the working Termux setup this is based on. This repo turns those steps into one script so it is easier for people to install, update, and uninstall.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/marshallrichards/ClawPhone/main/scripts/install-antigravity-termux.sh | bash
+source ~/.bashrc
+agy --version
 ```
+
+Details: [`docs/antigravity-termux.md`](docs/antigravity-termux.md)
+
+## OpenClaw Notes
+
+I started running OpenClaw on a cheap Android smartphone as an isolated sandbox for OpenClaw agents with access to phone hardware. It runs in the background inside Termux in a `tmux` session, and I can interact with it over Discord like a normal OpenClaw agent.
+
+You can use a cheap prepaid Android phone or any old Android 8+ phone you have lying around.
+
+Things to note:
+
+1. Install Termux. I recommend `tmux`, a text editor like `nvim`, `nodejs-lts`, and `python`. Also install Termux:API and Termux:GUI if you want hardware and UI access.
+2. Install OpenClaw with `npm install -g openclaw@latest`, not the bash installer, since the bash installer can fail on Android.
+3. If dependencies fail during install, install the missing packages with `pkg` and rerun the OpenClaw install.
+4. `llama.cpp` may compile from source because Termux lacks normal desktop glibc behavior. This can take 15-30 minutes.
+5. Errors about missing `systemd` are expected. Run the OpenClaw Gateway in the foreground or inside `tmux`.
+6. OpenClaw expects `/tmp/openclaw`, but raw Termux should use `$PREFIX/tmp`. Add this to `~/.bashrc`:
+
+```bash
 export TMPDIR="$PREFIX/tmp"
 export TMP="$TMPDIR"
 export TEMP="$TMPDIR"
 ```
-  6. You also want to make sure to add this to your `openclaw.json`:
-  ```
-   "logging": {
-     "level": "info",
-     "file": "/data/data/com.termux/files/usr/tmp/openclaw/openclaw-YYYY-MM-DD.log"
-   }
-  ```
-  7. Also make sure a temp directory inside the termux route exists so run: `  mkdir -p /data/data/com.termux/files/usr/tmp/openclaw`
-  8. After that do a `source .bashrc` and run `openclaw gateway` again and it should work.
-  9. Next, you can do `openclaw onboard` and add your model token for whichever model you choose. I recommend using `tmux` and running the gateway in a tmux session as a way to keep track of it and keep it alive.
-  10. Set the `gateway.bind` property to `lan` so that the Gateway can run as 0.0.0.0 that way you can hit the Dashboard from the phone's IP address on your local WiFi network.
-  11. You probably want to tell OpenClaw it is living inside a termux app on a Android smartphone and that Termux:API and Termux:GUI are installed so it can utilize those things if it needs to for a particular task.
 
+7. Add Termux-friendly logging to `openclaw.json`:
 
+```json
+"logging": {
+  "level": "info",
+  "file": "/data/data/com.termux/files/usr/tmp/openclaw/openclaw-YYYY-MM-DD.log"
+}
+```
 
+8. Create the temp directory:
 
-* You can also give OpenClaw the ability to write arbitrary things overlayed on top of the screen. Install Termux:GUI app and `pkg install termux-gui` inside termux and then run the `overlay_daemon.py` in a new window of the `tmux` session you have open and then instruct OpenClaw that it can use that daemon to write stuff to the screen for the user to see when needed.
+```bash
+mkdir -p /data/data/com.termux/files/usr/tmp/openclaw
+```
+
+9. Run `source ~/.bashrc`, then `openclaw gateway`.
+10. Run `openclaw onboard` and add your model token.
+11. Set `gateway.bind` to `lan` so the dashboard listens on `0.0.0.0` and can be reached from the phone's LAN IP.
+12. Tell OpenClaw it is running inside Termux on Android, and that Termux:API and Termux:GUI are installed if you want it to use phone hardware.
+
+You can also let OpenClaw write overlays on the screen. Install the Termux:GUI app, run `pkg install termux-gui`, start `overlay_daemon.py` in another `tmux` pane/window, and tell OpenClaw it can use that daemon when it needs to display something to the user.
