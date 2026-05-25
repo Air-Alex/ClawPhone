@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Shoutout to Brajesh for making and sharing the working Termux setup this
 # installer packages into one repeatable script.
+# Original gist: https://gist.github.com/Brajesh2022/e42160d29b55417db6c18c52dd1d6d37
 set -Eeuo pipefail
 
 SCRIPT_VERSION="0.1.0"

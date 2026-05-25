@@ -8,7 +8,7 @@ The goal is to keep things as native to Termux as possible, only using `proot` o
 
 The first packaged script is an installer for Google's Antigravity CLI (`agy`) on ARM64 Android/Termux. It installs/checks dependencies, installs the official Linux ARM64 binary, patches the TCMalloc VA assumptions for common Android devices, creates a glibc wrapper, adds shell shortcuts, and supports uninstall.
 
-Shoutout to [Brajesh](https://github.com/Brajesh2022) for figuring out and sharing the working Termux setup this is based on. This repo turns those steps into one script so it is easier for people to install, update, and uninstall.
+Shoutout to [Brajesh](https://github.com/Brajesh2022) for figuring out and sharing the [original working Termux setup](https://gist.github.com/Brajesh2022/e42160d29b55417db6c18c52dd1d6d37) this is based on. This repo turns those steps into one script so it is easier for people to install, update, and uninstall.
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/marshallrichards/ClawPhone/main/scripts/install-antigravity-termux.sh | bash

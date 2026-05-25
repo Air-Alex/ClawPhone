@@ -4,7 +4,7 @@ This repo includes an installer for running Google's Linux ARM64 Antigravity CLI
 
 The goal is native Termux first: no `proot-distro`, no VM, no Cloud Shell. The wrapper does use `proot` by default, but only as a tiny filesystem bind so the glibc/Go process can see Termux's DNS config at `/etc/resolv.conf`.
 
-Shoutout to Brajesh for making and sharing the working Termux setup this script is based on. This version packages those fixes into one installer so people can set it up, update it, or uninstall it without doing every step by hand.
+Shoutout to [Brajesh](https://github.com/Brajesh2022) for making and sharing the [original working Termux setup](https://gist.github.com/Brajesh2022/e42160d29b55417db6c18c52dd1d6d37) this script is based on. This version packages those fixes into one installer so people can set it up, update it, or uninstall it without doing every step by hand.
 
 ## Quick Install
 
